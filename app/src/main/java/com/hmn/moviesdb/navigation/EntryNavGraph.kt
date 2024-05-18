@@ -39,7 +39,7 @@ fun NavGraphBuilder.entryNavGraph(
                 }
             )
         }
-//        authGraph(navController = navController,loginViewModel = loginViewModel)
+      authGraph(navController = navController,loginViewModel = loginViewModel)
 
     }
 }

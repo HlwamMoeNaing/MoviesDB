@@ -17,7 +17,7 @@ fun RootNavigation() {
     val loginViewModel:LoginViewModel = hiltViewModel()
     NavHost(navController = navController, startDestination = AppNavGraph.ENTRY) {
         entryNavGraph(navController, splashViewModel = splashViewModel,loginViewModel = loginViewModel)
-        homeNavGraph(navController)
+        homeNavGraph(navController,loginViewModel = loginViewModel)
     }
 }
 

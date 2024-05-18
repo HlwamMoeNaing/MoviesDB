@@ -8,8 +8,8 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.7.0"
 activityCompose = "1.9.0"
 composeBom = "2023.08.00"
-
-
+composeAnimation = "1.7.0-alpha07"
+navigationCompose = "2.7.7"
 # production libraries
 kspPlugin = "1.9.0-1.0.12"
 ktlint = "3.16.0"
@@ -74,7 +74,9 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 hiltnavigation = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltnavigation" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 #androidx.datastore:datastore-preferences:1.0.0
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeAnimation" }
 dataStore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }
 #com.squareup.retrofit2:converter-gson:2.11.0
 gsonConvertor = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }

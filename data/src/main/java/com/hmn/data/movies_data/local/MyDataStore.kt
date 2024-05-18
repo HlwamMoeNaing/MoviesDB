@@ -21,6 +21,7 @@ class MyDataStore @Inject constructor(
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("myDataStore")
 
         val USER_NAME = stringPreferencesKey("user_name")
+        val EMAIL = stringPreferencesKey("email")
         val PASSWORD = intPreferencesKey("password")
         val IS_LOGIN = booleanPreferencesKey("is_login")
 
@@ -34,7 +35,17 @@ class MyDataStore @Inject constructor(
     }
 
     val getUserName: Flow<String> = application.dataStore.data.map { preferences ->
-        preferences[USER_NAME] ?: "-"
+        preferences[USER_NAME] ?: ""
+    }
+
+    suspend fun setEmail(email: String) {
+        application.dataStore.edit { preferences ->
+            preferences[EMAIL] = email
+        }
+    }
+
+    val getEmail: Flow<String> = application.dataStore.data.map { preferences ->
+        preferences[EMAIL] ?: ""
     }
 
 
@@ -55,7 +66,7 @@ class MyDataStore @Inject constructor(
     }
 
     val getLoginStatus = application.dataStore.data.map { preferences ->
-        return@map preferences[IS_LOGIN] ?: true
+        return@map preferences[IS_LOGIN] ?: false
     }
 
 }

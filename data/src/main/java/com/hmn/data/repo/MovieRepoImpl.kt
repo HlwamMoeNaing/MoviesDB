@@ -1,5 +1,6 @@
 package com.hmn.data.repo
 
+import android.util.Log
 import com.hmn.data.domain.MovieRepo
 import com.hmn.data.domain.MoviesDbRepo
 import com.hmn.data.model.resp.ApiResponse
@@ -10,193 +11,70 @@ import com.hmn.data.movies_data.local.AppDatabase
 import com.hmn.data.movies_data.network.ApiResponseHandler
 import com.hmn.data.movies_data.network.TheMoviesDbApiService
 import com.hmn.data.utils.MovieCategory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
 import retrofit2.Response
 import javax.inject.Inject
 
-class MovieRepoImpl @Inject constructor(
+class MovieRepository @Inject constructor(
     private val apiService: TheMoviesDbApiService,
-    private val dbRepoImpl: MoviesDbRepo
-) : MovieRepo {
-    override suspend fun getAndSaveNowPlayingMovies(): AppDataResult<String> {
-        return try {
-            when (val response = getNowPlayingMovies()) {
-                is ApiResponse.ApiError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
+    private val appDatabase: AppDatabase
+) {
+    suspend fun fetchAndSaveMovies(category: MovieCategory) {
+        val apiResponse = when (category) {
+            MovieCategory.POPULAR -> apiService.getPopularMovies()
+            MovieCategory.NOW_PLAYING -> apiService.getNowPlayingMovies()
+            MovieCategory.TOP_RATED -> apiService.getTopRatedMovies()
+        }
 
-                is ApiResponse.AuthorizationError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                ApiResponse.Default -> {
-                    AppDataResult.Default
-                }
-
-                ApiResponse.Loading -> {
-                    AppDataResult.Loading
-                }
-
-                is ApiResponse.NetworkError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.ServerConnectionError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.Success -> {
-                    val result = response.data
-                    var movies = result?.results ?: emptyList()
-                    movies = movies.map { movie ->
-                        movie.copy(category = MovieCategory.NOW_PLAYING.name)
-                    }
-                    dbRepoImpl.deleteAllSaveMovies()
-                    dbRepoImpl.insertMovies(movies)
-                    AppDataResult.Success("Success")
-                }
-
-                is ApiResponse.TimeoutError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-            }
-        } catch (e: Exception) {
-            AppDataResult.Error(e)
+        if (apiResponse.isSuccessful && apiResponse.body() != null) {
+            val movies = apiResponse.body()?.results ?: emptyList()
+            val moviesWithCategory = movies.map { it.copy(category = category.name) }
+            appDatabase.movieDao().insertMovies(moviesWithCategory)
+        } else {
+            throw Exception(
+                "Failed to fetch ${category.name} movies: ${
+                    apiResponse.errorBody()?.string()
+                }"
+            )
         }
     }
 
-    override suspend fun getAndSaveTopRatedMovies(): AppDataResult<String> {
-        return try {
-            when (val response = getTopRateMovies()) {
-                is ApiResponse.ApiError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
+    suspend fun getMoviesByCategory(category: String): List<MovieVo> {
+        return appDatabase.movieDao().getMoviesWithCategory(category)
+    }
 
-                is ApiResponse.AuthorizationError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
 
-                ApiResponse.Default -> {
-                    AppDataResult.Default
-                }
-
-                ApiResponse.Loading -> {
-                    AppDataResult.Loading
-                }
-
-                is ApiResponse.NetworkError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.ServerConnectionError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.Success -> {
-                    val result = response.data
-                    var movies = result?.results ?: emptyList()
-                    movies = movies.map { movie ->
-                        movie.copy(category = MovieCategory.TOP_RATED.name)
-                    }
-                    dbRepoImpl.deleteAllSaveMovies()
-                    dbRepoImpl.insertMovies(movies)
-                    AppDataResult.Success("Success")
-                }
-
-                is ApiResponse.TimeoutError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-            }
-        } catch (e: Exception) {
-            AppDataResult.Error(e)
+    suspend fun checkMoviesExist(): Boolean {
+        return withContext(Dispatchers.IO) {
+            appDatabase.movieDao().getAllMovies().firstOrNull() != null
         }
     }
 
-    override suspend fun getAndSavePopularMovies(): AppDataResult<String> {
-        return try {
-            when (val response = getPopularMovies()) {
-                is ApiResponse.ApiError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.AuthorizationError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                ApiResponse.Default -> {
-                    AppDataResult.Default
-                }
-
-                ApiResponse.Loading -> {
-                    AppDataResult.Loading
-                }
-
-                is ApiResponse.NetworkError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.ServerConnectionError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-
-                is ApiResponse.Success -> {
-                    val result = response.data
-                    var movies = result?.results ?: emptyList()
-                    movies = movies.map { movie ->
-                        movie.copy(category = MovieCategory.POPULAR.name)
-                    }
-                    dbRepoImpl.deleteAllSaveMovies()
-                    dbRepoImpl.insertMovies(movies)
-                    AppDataResult.Success("Success")
-                }
-
-                is ApiResponse.TimeoutError -> {
-                    val errorMessage = response.message
-                    AppDataResult.Error(Exception(errorMessage))
-                }
-            }
-        } catch (e: Exception) {
-            AppDataResult.Error(e)
+    suspend fun getAllMovies(): Flow<List<MovieVo>> {
+        return withContext(Dispatchers.IO) {
+            appDatabase.movieDao().getAllMovies()
         }
     }
 
-    override suspend fun getMovieDetails(movieId: String): ApiResponse<MovieVo> {
-        return ApiResponseHandler.processResponse {
-            apiService.getMovieDetailsWithFlow(movieId)
+    suspend fun getMovieById(id: Int): MovieVo {
+        return withContext(Dispatchers.IO) {
+            appDatabase.movieDao().getMovieById(id)
         }
     }
 
 
-    private suspend fun getNowPlayingMovies(): ApiResponse<MovieListResponse> {
-        return ApiResponseHandler.processResponse {
-            apiService.getNowPlayingMovies()
+    suspend fun searchMoviesByTitle(title: String): Flow<List<MovieVo>> {
+        return withContext(Dispatchers.IO) {
+            appDatabase.movieDao().searchMoviesByName(title)
         }
     }
 
-    private suspend fun getTopRateMovies(): ApiResponse<MovieListResponse> {
-        return ApiResponseHandler.processResponse {
-            apiService.getTopRatedMovies()
+    suspend fun deleteAllMovies() {
+        withContext(Dispatchers.IO) {
+            appDatabase.movieDao().deleteAllSaveMovies()
         }
     }
-
-    private suspend fun getPopularMovies(): ApiResponse<MovieListResponse> {
-        return ApiResponseHandler.processResponse {
-            apiService.getTopRatedMovies()
-        }
-    }
-
-
 }

@@ -26,19 +26,14 @@ interface MoviesDao {
     @Query("SELECT * From movies Where category LIKE :mCategory")
     suspend fun getMoviesWithCategory(mCategory: String): List<MovieVo>
 
-    @Query("SELECT * FROM movies WHERE category IN (:categories)")
-    suspend fun getMoviesWithCategories(categories: String): List<MovieVo>
+
+    @Query("SELECT * From movies Where id = :id")
+    suspend fun getMovieById(id: Int): MovieVo
 
     @Update
     fun updateMovie(entity: MovieVo)
 
-    @Query("UPDATE movies SET isFavourite = :isFavourite WHERE id = :movieId")
-    suspend fun updateFavouriteStatus(movieId: Int, isFavourite: Boolean)
-
-    @Query("SELECT isFavourite FROM movies WHERE id = :mediaId")
-    fun isFavorite(mediaId: Int): LiveData<Boolean>
-
-    @Query("SELECT * FROM movies WHERE isFavourite LIKE :isFav")
-    fun getAllFavMovies(isFav: Boolean = true):List<MovieVo>
+    @Query("SELECT * FROM movies WHERE title LIKE '%' || :title || '%'")
+    fun searchMoviesByName(title:String): Flow<List<MovieVo>>
 
 }

@@ -57,17 +57,17 @@ fun SplashScreenContent(
     val isLoading = splashUiState.isLoading
     val shouldLogin = splashUiState.shouldLogin
     val shouldHome = splashUiState.shouldHome
-    Log.d("@SplashS", "SplashScreenContent: shouldLogin $shouldLogin  shouldHome $shouldHome")
+
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Yellow), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(modifier = Modifier.size(50.dp))
 
-            Text(text = "Splash Screen")
+
         }
     }
 
     if (shouldErrorDialog) {
-        //showErrorDialog
+
     }
 
     if (shouldHome) {
@@ -75,6 +75,10 @@ fun SplashScreenContent(
     }
     if (shouldLogin) {
         onLogin()
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color.Yellow), contentAlignment = Alignment.Center) {
+        Text(text = "Splash Screen")
     }
 
 

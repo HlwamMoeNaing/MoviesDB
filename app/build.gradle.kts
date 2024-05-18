@@ -53,6 +53,7 @@ android {
 }
 
 dependencies {
+    val accompanist_version = "0.28.0"
     implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -101,5 +102,12 @@ dependencies {
     implementation("io.coil-kt:coil:2.1.0")
     implementation(libs.mconstraintlayout)
     implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.26.5-rc")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist_version")
+    implementation("com.google.accompanist:accompanist-pager:$accompanist_version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("com.google.accompanist:accompanist-permissions:0.30.1")
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.navigation.compose)
 
 }
