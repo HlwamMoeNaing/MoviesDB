@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MoviesDB</string>
+    <string name="home_toolbar_title">Tool Bar</string>
+</resources>
