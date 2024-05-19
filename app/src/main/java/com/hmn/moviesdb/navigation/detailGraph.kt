@@ -8,8 +8,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.hmn.moviesdb.ui.screens.detail.DetailScreen
 import com.hmn.moviesdb.ui.screens.detail.DetailViewModel
-import com.hmn.moviesdb.ui.screens.favourite.FavouriteScreen
-import com.hmn.moviesdb.ui.screens.home.HomeScreen
 import com.hmn.moviesdb.ui.screens.view_all.ViewAllScreen
 import com.hmn.moviesdb.ui.screens.view_all.ViewAllViewModel
 

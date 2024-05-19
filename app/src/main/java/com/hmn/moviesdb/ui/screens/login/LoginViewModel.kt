@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.graphics.painter.BrushPainter
 import androidx.lifecycle.viewModelScope
 import com.hmn.data.movies_data.local.MyDataStore
+import com.hmn.data.repo.MovieRepository
 import com.hmn.data.utils.NetworkUtil
 import com.hmn.moviesdb.core.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     context: Application,
     private val myDataStore: MyDataStore,
+    private val repository: MovieRepository,
     private val networkUtil: NetworkUtil,
 ) : BaseViewModel(context,networkUtil) {
     private val _loginUiState = MutableStateFlow(LoginUiState())
@@ -46,6 +48,12 @@ class LoginViewModel @Inject constructor(
             myDataStore.setEmail("")
             myDataStore.setPassword(0)
             myDataStore.setLoginStatus(false)
+        }
+    }
+
+    fun clearDatabase(){
+        viewModelScope.launch {
+            repository.deleteAllMovies()
         }
     }
 

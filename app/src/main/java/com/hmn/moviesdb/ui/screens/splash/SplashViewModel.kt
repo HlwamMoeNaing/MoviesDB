@@ -1,6 +1,7 @@
 package com.hmn.moviesdb.ui.screens.splash
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.hmn.data.movies_data.local.MyDataStore
@@ -68,6 +69,8 @@ class SplashViewModel @Inject constructor(
                     }
                 }
             } else {
+                val test = movieRepository.checkMoviesExist()
+                Log.d("@SpSc", "checkNetwork: $test")
                 if (movieRepository.checkMoviesExist()) {
                     if (email.isNotEmpty() && isLogin) {
                         _splashUiState.update {

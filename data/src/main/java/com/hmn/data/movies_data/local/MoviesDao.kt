@@ -30,10 +30,21 @@ interface MoviesDao {
     @Query("SELECT * From movies Where id = :id")
     suspend fun getMovieById(id: Int): MovieVo
 
+   @Query("SELECT * FROM movies WHERE isFavourite LIKE :isFav")
+    suspend fun getMoviesWhereFavourite(isFav: Boolean = true):List<MovieVo>
+
     @Update
     fun updateMovie(entity: MovieVo)
 
     @Query("SELECT * FROM movies WHERE title LIKE '%' || :title || '%'")
     fun searchMoviesByName(title:String): Flow<List<MovieVo>>
+
+    @Query("UPDATE movies SET isFavourite = :isFavourite WHERE id = :movieId")
+    suspend fun updateFavouriteStatus(movieId: Int, isFavourite: Boolean)
+
+    @Query("SELECT COUNT(*) FROM movies")
+    suspend fun getMoviesCount(): Int?
+
+
 
 }

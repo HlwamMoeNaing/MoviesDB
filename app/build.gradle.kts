@@ -109,5 +109,6 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.30.1")
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.navigation.compose)
+    implementation ("androidx.compose.runtime:runtime-livedata:1.5.3")
 
 }

@@ -14,6 +14,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavHostController,loginViewModel
         composable(route = Routes.HomeScreen.name) {
             AppScaffold(){
                 loginViewModel.clearLoginInfo()
+                loginViewModel.clearDatabase()
                 navController.navigate(AppNavGraph.AUTH){
                     popUpTo(0) {
                         inclusive = true

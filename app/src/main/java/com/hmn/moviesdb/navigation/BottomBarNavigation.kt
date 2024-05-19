@@ -47,7 +47,7 @@ fun BottomBarNavigation(
         }
 
         composable(Routes.FavouriteScreen.name) {
-            FavouriteScreen()
+            FavouriteScreen(viewModel = homeViewModel, navController = navController)
         }
 
         composable(Routes.SearchScreen.name) {

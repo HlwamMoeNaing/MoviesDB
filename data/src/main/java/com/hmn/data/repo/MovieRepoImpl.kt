@@ -1,6 +1,7 @@
 package com.hmn.data.repo
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import com.hmn.data.domain.MovieRepo
 import com.hmn.data.domain.MoviesDbRepo
 import com.hmn.data.model.resp.ApiResponse
@@ -47,9 +48,16 @@ class MovieRepository @Inject constructor(
     }
 
 
+//    suspend fun checkMoviesExist(): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            appDatabase.movieDao().getAllMovies().firstOrNull() != null
+//        }
+//    }
+
     suspend fun checkMoviesExist(): Boolean {
         return withContext(Dispatchers.IO) {
-            appDatabase.movieDao().getAllMovies().firstOrNull() != null
+            val count = appDatabase.movieDao().getMoviesCount()
+            count != null && count > 0
         }
     }
 
@@ -69,6 +77,17 @@ class MovieRepository @Inject constructor(
     suspend fun searchMoviesByTitle(title: String): Flow<List<MovieVo>> {
         return withContext(Dispatchers.IO) {
             appDatabase.movieDao().searchMoviesByName(title)
+        }
+    }
+
+
+    suspend fun updateFavStatus(movieId: Int, isFavourite: Boolean) {
+        appDatabase.movieDao().updateFavouriteStatus(movieId, isFavourite)
+    }
+
+    suspend fun getFavouriteMovies(): List<MovieVo> {
+        return withContext(Dispatchers.IO) {
+            appDatabase.movieDao().getMoviesWhereFavourite()
         }
     }
 

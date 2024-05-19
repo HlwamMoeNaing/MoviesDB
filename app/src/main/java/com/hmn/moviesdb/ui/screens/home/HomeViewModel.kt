@@ -27,6 +27,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         fetchMovies()
+        getFavoriteMovies()
     }
 
     private fun fetchMovies() {
@@ -107,6 +108,21 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+     fun getFavoriteMovies(){
+        viewModelScope.launch {
+            try {
+                val favMovies = movieRepository.getFavouriteMovies()
+                _homeUiState.update {
+                    it.copy(fetchFavouriteMovies = favMovies)
+                }
+            }catch (e:Exception){
+                _homeUiState.update {
+                    it.copy(errorMessageForFavourite = e.localizedMessage)
+                }
+            }
+        }
+    }
+
     fun onEvent(event: HomeUiEvent){
         when(event){
             is HomeUiEvent.NavigateToDetail -> navigateToDetail(event.id)
@@ -122,7 +138,10 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val nowPlayingMovies: List<MovieVo> = emptyList(),
     val topRatedMovies: List<MovieVo> = emptyList(),
-    val popularMovies: List<MovieVo> = emptyList()
+    val popularMovies: List<MovieVo> = emptyList(),
+
+    val fetchFavouriteMovies:List<MovieVo> = emptyList(),
+    val errorMessageForFavourite:String? = null
 )
 
 sealed class HomeUiEvent(){

@@ -1,5 +1,6 @@
 package com.hmn.moviesdb.ui.screens.detail
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -31,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -67,16 +70,35 @@ fun DetailScreen(
     LaunchedEffect(key1 = Unit) {
         detailViewModel.getMovieById(detailId)
     }
+    val context = LocalContext.current
     val detailUiState by detailViewModel.detailUiState.collectAsStateWithLifecycle()
     val movieDetail = detailUiState.movie
     val error = detailUiState.error
+    val isFavourite = detailUiState.isFavorite
 
+    val isFavOccur = detailUiState.isFavErrorOccure
+    val isFavErrorMsg = detailUiState.favStateErrorMessage
+    var shouldFavToast by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(key1 = isFavOccur) {
+        if (isFavOccur && !isFavErrorMsg.isNullOrEmpty()) {
+            shouldFavToast = true
+        }
+    }
+    if (shouldFavToast) {
+        Toast.makeText(context, isFavErrorMsg, Toast.LENGTH_SHORT).show()
+        shouldFavToast = false
+    }
+
+    var tintColor = if (isFavourite) {
+        Color.Red
+    } else {
+        Color.LightGray
+    }
 
     val scrollState = rememberScrollState()
-//   Scaffold {padding->
-//
-//   }
-    //${UrlConstants.IMAGE_BASE_URL}/$moviePoster
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,93 +106,110 @@ fun DetailScreen(
             .padding(horizontal = 16.dp)
     ) {
 
-        val posterPath = movieDetail?.posterPath ?: ""
-        val rating = movieDetail?.getRatingBaseOnFiveStar()
-        DetailAppBar(
-            tittle = movieDetail?.title ?: "",
-            isShowFavButton = true,
-            isFav = false,
-            onBackClick = { },
-            onFavClickL = { })
-        Image(
-            painter = rememberImagePainter(
-                data = "${UrlConstants.IMAGE_BASE_URL}/$posterPath",
-                builder = {
-                    placeholder(R.drawable.placeholder_image)
-                    crossfade(true)
-                }
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .clip(MaterialTheme.shapes.medium),
-            contentScale = ContentScale.Crop
-        )
+        if (movieDetail != null) {
+            val posterPath = movieDetail?.posterPath ?: ""
+            val rating = movieDetail?.getRatingBaseOnFiveStar()
 
-        Spacer(modifier = Modifier.height(16.dp))
+            //  val isFav = detailViewModel.isAFavorite(movieDetail.id).observeAsState().value ?: false
+            DetailAppBar(
+                tittle = movieDetail?.title ?: "",
+                isShowFavButton = true,
+                isFav = isFavourite,
+                onBackClick = { },
+                onFavClickL = {
+                    detailViewModel.onEvent(
+                        DetailUiEvent.OnFavourite(
+                            movieId = movieDetail.id,
+                            isFav = !isFavourite
+                        )
+                    )
+                    tintColor = Color.Red
 
-        Text(
-            text = movieDetail?.title ?: "",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+                },
+                tintColor = tintColor
+
+            )
+            Image(
+                painter = rememberImagePainter(
+                    data = "${UrlConstants.IMAGE_BASE_URL}/$posterPath",
+                    builder = {
+                        placeholder(R.drawable.placeholder_image)
+                        crossfade(true)
+                    }
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = movieDetail?.title ?: "",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
 //           Text(
 //               text = "Genre: $genre",
 //           )
-        GenreAndRating(
-            genre = " Genre: ${movieDetail?.genres?.get(0)?.name ?: ""}",
-            rating = rating ?: 0f
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.DateRange,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
+            GenreAndRating(
+                genre = " Genre: ${movieDetail?.genres?.get(0)?.name ?: ""}",
+                rating = rating ?: 0f
             )
-            Spacer(modifier = Modifier.width(4.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = movieDetail?.releaseDate ?: "",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = movieDetail?.releaseDate ?: "",
-                style = MaterialTheme.typography.bodyMedium
+                text = movieDetail?.overview ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = movieDetail?.overview ?: "",
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+                maxLines = 6
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Actors:",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = movieDetail?.overview ?: "",
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text =movieDetail?.overview ?: "",
-            fontSize = 16.sp,
-            lineHeight = 24.sp,
-            maxLines = 6
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Actors:",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
 
     }
 }

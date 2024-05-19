@@ -26,7 +26,8 @@ fun DetailAppBar(
     isShowFavButton:Boolean = false,
     isFav:Boolean = false,
     onBackClick:()->Unit,
-    onFavClickL:()->Unit
+    onFavClickL:()->Unit,
+    tintColor: Color
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(10.dp),
@@ -54,10 +55,11 @@ fun DetailAppBar(
         if (isShowFavButton){
             IconButton(onClick = {
                 onFavClickL()
+
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.fav_filled),
-                    // tint = primaryPink,
+
                     tint = if (isFav) {
                         Color.Red
                     } else {

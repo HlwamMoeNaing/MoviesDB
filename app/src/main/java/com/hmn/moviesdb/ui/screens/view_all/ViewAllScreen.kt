@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.hmn.moviesdb.core.BaseScreen
@@ -62,7 +63,8 @@ fun ViewAllContent(
                     tittle = category.toUpperCase(),
                     isFav = false,
                     onBackClick = { },
-                    onFavClickL = { })
+                    onFavClickL = { },
+                    tintColor = Color.Transparent)
                 LazyColumn {
                     items(movies, key = { it.id }) { movie ->
                         ViewAllItem(movies = movie, goToDetailScreen = {
