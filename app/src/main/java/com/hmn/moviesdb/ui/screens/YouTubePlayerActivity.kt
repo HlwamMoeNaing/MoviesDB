@@ -4,7 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.activity.ComponentActivity
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
@@ -23,6 +26,8 @@ class YouTubePlayerActivity : ComponentActivity() {
         }
     }
 
+    private lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val videoId = intent.getStringExtra(VIDEO_ID) ?: return
@@ -33,12 +38,30 @@ class YouTubePlayerActivity : ComponentActivity() {
         val youtubePlayerView = YouTubePlayerView(this).apply {
             addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
                 override fun onReady(youTubePlayer: YouTubePlayer) {
+                    progressBar.visibility = View.GONE
                     youTubePlayer.loadVideo(videoId, 0f)
                 }
             })
         }
 
-        setContentView(youtubePlayerView)
+        progressBar = ProgressBar(this).apply {
+            isIndeterminate = true
+            visibility = View.VISIBLE
+        }
+
+        val container = FrameLayout(this).apply {
+            addView(youtubePlayerView, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            ))
+            addView(progressBar, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            ))
+        }
+
+        setContentView(container)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

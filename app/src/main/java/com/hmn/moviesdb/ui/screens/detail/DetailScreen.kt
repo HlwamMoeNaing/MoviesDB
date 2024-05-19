@@ -75,23 +75,30 @@ fun DetailScreen(
 ) {
 
 
-    LaunchedEffect(key1 = Unit) {
-        detailViewModel.getMovieById(detailId)
+
+    val isInternetAvailable by detailViewModel.isNetwork.collectAsStateWithLifecycle()
+    LaunchedEffect(key1 = detailId) {
+     detailViewModel.getMovieById(detailId)
+        detailViewModel.getVideoInfoWithId(detailId,isInternetAvailable)
     }
     val context = LocalContext.current
     val detailUiState by detailViewModel.detailUiState.collectAsStateWithLifecycle()
     val movieDetail = detailUiState.movie
     val error = detailUiState.error
     val isFavourite = detailUiState.isFavorite
-    val isInternetAvailable by detailViewModel.isNetwork.collectAsStateWithLifecycle()
+
 
     if (!error.isNullOrEmpty()){
         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
     }
 
 
-    val isVideoErrorMessage = detailUiState.videoError
-    val videoKey = detailUiState.videoKey
+    val videoState by detailViewModel.videoUiState.collectAsStateWithLifecycle()
+
+    val isVideoErrorMessage = videoState.videoErrorMessage
+    val videoKey = videoState.videoKey
+    val videoLoading = videoState.videoLoading
+    val isVideoError = videoState.videoError
 
     val isFavOccur = detailUiState.isFavErrorOccure
     val isFavErrorMsg = detailUiState.favStateErrorMessage
@@ -168,25 +175,42 @@ fun DetailScreen(
                 IconButton(
                     onClick = {
                         detailViewModel.checkNetwork()
-                        detailViewModel.getVideoInfoWithId(detailId)
-                        if(isInternetAvailable){
-                            if(isVideoErrorMessage == null && videoKey != null){
-                                YouTubePlayerActivity.start(context, videoKey)
-                            }else{
-                                Toast.makeText(context, isVideoErrorMessage ?: "Something Wrong", Toast.LENGTH_SHORT).show()
-                            }
-                        }else{
-                            Toast.makeText(context, "Network Unavailabale", Toast.LENGTH_SHORT).show()
+                        val hasInternet = detailViewModel.isNetwork.value
+
+                        detailViewModel.getVideoInfoWithId(detailId, isInternetAvailable)
+
+                        if (!hasInternet) {
+                            Toast.makeText(context, "Network Unavailable", Toast.LENGTH_SHORT).show()
+                            return@IconButton
                         }
 
+                        if (videoLoading) {
+                            Toast.makeText(context, "Loading Video", Toast.LENGTH_SHORT).show()
+                            return@IconButton
+                        }
 
+                        if (isVideoErrorMessage != null) {
+                            Toast.makeText(context, isVideoErrorMessage, Toast.LENGTH_SHORT).show()
+                            return@IconButton
+                        }
+
+                        if (videoKey == "") {
+                            Toast.makeText(context, "Loading Video", Toast.LENGTH_SHORT).show()
+                            return@IconButton
+                        }
+
+                        if (videoKey != null) {
+                            YouTubePlayerActivity.start(context, videoKey)
+                        } else {
+                            Toast.makeText(context, "No Video Key Found", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(64.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                ) {
+                ){
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,

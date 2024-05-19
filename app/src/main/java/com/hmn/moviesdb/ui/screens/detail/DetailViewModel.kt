@@ -1,6 +1,7 @@
 package com.hmn.moviesdb.ui.screens.detail
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.hmn.data.model.ResourceState
@@ -9,12 +10,12 @@ import com.hmn.data.repo.MovieRepository
 import com.hmn.data.utils.NetworkUtil
 import com.hmn.moviesdb.core.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     private val repository: MovieRepository,
@@ -23,17 +24,22 @@ class DetailViewModel @Inject constructor(
 ) : BaseViewModel(context, networkUtil) {
     private val _detailUiState = MutableStateFlow(DetailUiState())
     val detailUiState = _detailUiState.asStateFlow()
-    val isNetwork = MutableStateFlow(false)
 
+    private val _videoUiState = MutableStateFlow(VideoState())
+    val videoUiState = _videoUiState.asStateFlow()
+
+    val isNetwork = MutableStateFlow(false)
 
     init {
         checkNetwork()
     }
-     fun checkNetwork(){
+
+    fun checkNetwork() {
         viewModelScope.launch {
             isNetwork.value = networkUtil.isNetworkConnected()
         }
     }
+
     fun getMovieById(id: Int) {
         viewModelScope.launch {
             try {
@@ -49,10 +55,8 @@ class DetailViewModel @Inject constructor(
                     it.copy(isLoading = false, error = e.message)
                 }
             }
-
         }
     }
-
 
     private fun updateFavStatus(movieId: Int, isFav: Boolean) {
         viewModelScope.launch {
@@ -67,44 +71,72 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    fun getVideoInfoWithId(id: Int) {
+    fun getVideoInfoWithId(id: Int, isInternetAvailable: Boolean) {
+        Log.d("@VdKey", "getVideoInfoWithId: Start")
         viewModelScope.launch {
+            if (!isInternetAvailable) {
+                Log.d("@VdKey", "getVideoInfoWithId: inside not internet")
+                _videoUiState.update {
+                    it.copy(
+                        videoLoading = false,
+                        videoError = true,
+                        videoErrorMessage = "Network Unavailable"
+                    )
+                }
+                return@launch
+            }
+
+            Log.d("@VdKey", "getVideoInfoWithId: Start Loading")
+            _videoUiState.update {
+                it.copy(
+                    videoLoading = true,
+                    videoError = false,
+                    videoErrorMessage = null,
+                    videoKey = ""
+                )
+            }
+
             try {
+                delay(500)
                 when (val response = repository.getVideoWithId(id)) {
                     is ResourceState.Error -> {
-                        _detailUiState.update {
+                        Log.d("@VdKey", "getVideoInfoWithId: Error")
+                        _videoUiState.update {
                             it.copy(
-                                videoError = response.error
+                                videoLoading = false,
+                                videoError = true,
+                                videoErrorMessage = response.error,
+                                videoKey = null
                             )
-
                         }
                     }
-
                     is ResourceState.Loading -> {
-                        _detailUiState.update {
-                            it.copy(
-                                videoError = null
-                            )
-                        }
+                        Log.d("@VdKey", "getVideoInfoWithId: loading Sate Rsp")
+                        // This state is already handled before the request
                     }
-
                     is ResourceState.Success -> {
+                        Log.d("@VdKey", "getVideoInfoWithId: success")
                         val data = response.data
                         val result = data.results.firstOrNull()
-                        _detailUiState.update {
+                        _videoUiState.update {
                             it.copy(
-                                videoError = null,
+                                videoLoading = false,
+                                videoError = false,
+                                videoErrorMessage = null,
                                 videoKey = result?.key
                             )
                         }
                     }
                 }
             } catch (e: Exception) {
-                _detailUiState.update {
+                Log.d("@VdKey", "getVideoInfoWithId: Exception")
+                _videoUiState.update {
                     it.copy(
-                        videoError = e.localizedMessage ?: "Something Wrong"
+                        videoLoading = false,
+                        videoError = true,
+                        videoErrorMessage = e.localizedMessage ?: "Exception Occurred",
+                        videoKey = null
                     )
-
                 }
             }
         }
@@ -113,7 +145,6 @@ class DetailViewModel @Inject constructor(
     fun onEvent(event: DetailUiEvent) {
         when (event) {
             is DetailUiEvent.OnFavourite -> updateFavStatus(event.movieId, event.isFav)
-
         }
     }
 }
@@ -125,14 +156,15 @@ data class DetailUiState(
     val isFavorite: Boolean = false,
     val isFavErrorOccure: Boolean = false,
     val favStateErrorMessage: String? = null,
+)
 
-    val videoError: String? = null,
-    val videoKey: String? = null
-
+data class VideoState(
+    val videoLoading: Boolean = false,
+    val videoError: Boolean = false,
+    val videoKey: String? = null,
+    val videoErrorMessage: String? = null
 )
 
 sealed class DetailUiEvent {
     data class OnFavourite(val movieId: Int, val isFav: Boolean) : DetailUiEvent()
-
-
 }
