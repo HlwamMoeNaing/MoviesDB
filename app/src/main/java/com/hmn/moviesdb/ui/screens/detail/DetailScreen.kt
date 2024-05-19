@@ -26,7 +26,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +58,8 @@ import coil.compose.rememberImagePainter
 import com.hmn.data.utils.UrlConstants
 import com.hmn.moviesdb.R
 import com.hmn.moviesdb.core.BaseScreen
+import com.hmn.moviesdb.navigation.Routes
+import com.hmn.moviesdb.ui.screens.YouTubePlayerActivity
 import com.hmn.moviesdb.ui.theme.BlueVariant
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -65,6 +69,7 @@ fun DetailScreen(
     detailViewModel: DetailViewModel,
     navController: NavController,
     detailId: Int,
+    onBackPress: () -> Unit
 ) {
 
     LaunchedEffect(key1 = Unit) {
@@ -75,6 +80,14 @@ fun DetailScreen(
     val movieDetail = detailUiState.movie
     val error = detailUiState.error
     val isFavourite = detailUiState.isFavorite
+
+    if (!error.isNullOrEmpty()){
+        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+    }
+
+
+    val isVideoErrorMessage = detailUiState.videoError
+    val videoKey = detailUiState.videoKey
 
     val isFavOccur = detailUiState.isFavErrorOccure
     val isFavErrorMsg = detailUiState.favStateErrorMessage
@@ -107,15 +120,13 @@ fun DetailScreen(
     ) {
 
         if (movieDetail != null) {
-            val posterPath = movieDetail?.posterPath ?: ""
-            val rating = movieDetail?.getRatingBaseOnFiveStar()
-
-            //  val isFav = detailViewModel.isAFavorite(movieDetail.id).observeAsState().value ?: false
+            val posterPath = movieDetail.posterPath ?: ""
+            val rating = movieDetail.getRatingBaseOnFiveStar()
             DetailAppBar(
-                tittle = movieDetail?.title ?: "",
+                tittle = movieDetail.title ?: "",
                 isShowFavButton = true,
                 isFav = isFavourite,
-                onBackClick = { },
+                onBackClick = { onBackPress()},
                 onFavClickL = {
                     detailViewModel.onEvent(
                         DetailUiEvent.OnFavourite(
@@ -130,37 +141,62 @@ fun DetailScreen(
                 tintColor = tintColor
 
             )
-            Image(
-                painter = rememberImagePainter(
-                    data = "${UrlConstants.IMAGE_BASE_URL}/$posterPath",
-                    builder = {
-                        placeholder(R.drawable.placeholder_image)
-                        crossfade(true)
-                    }
-                ),
-                contentDescription = null,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
-                    .clip(MaterialTheme.shapes.medium),
-                contentScale = ContentScale.Crop
-            )
+            ) {
+                Image(
+                    painter = rememberImagePainter(
+                        data = "${UrlConstants.IMAGE_BASE_URL}/$posterPath",
+                        builder = {
+                            placeholder(R.drawable.placeholder_image)
+                            crossfade(true)
+                        }
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.medium),
+                    contentScale = ContentScale.Crop
+                )
+
+                IconButton(
+                    onClick = {
+
+                        if(isVideoErrorMessage == null && videoKey != null){
+                            YouTubePlayerActivity.start(context, videoKey)
+                        }else{
+                            Toast.makeText(context, isVideoErrorMessage ?: "Something Wrong", Toast.LENGTH_SHORT).show()
+                        }
+
+                    },
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = movieDetail?.title ?: "",
+                text = movieDetail.title ?: "",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-//           Text(
-//               text = "Genre: $genre",
-//           )
             GenreAndRating(
-                genre = " Genre: ${movieDetail?.genres?.get(0)?.name ?: ""}",
+                genre = " Genre: ${movieDetail.genres?.get(0)?.name ?: ""}",
                 rating = rating ?: 0f
             )
 
@@ -177,7 +213,7 @@ fun DetailScreen(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = movieDetail?.releaseDate ?: "",
+                    text = movieDetail.releaseDate ?: "",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -185,7 +221,7 @@ fun DetailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = movieDetail?.overview ?: "",
+                text = movieDetail.overview ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -193,7 +229,7 @@ fun DetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = movieDetail?.overview ?: "",
+                text = movieDetail.overview ?: "",
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
                 maxLines = 6
@@ -302,14 +338,3 @@ fun VoteAverageRatingIndicator(
 
 }
 
-
-@Composable
-fun MovieDetailScreenContent(
-    movieTitle: String,
-    movieDescription: String,
-    genre: String,
-    releaseDate: String,
-    moviePoster: String,
-    rating: Float
-) {
-}

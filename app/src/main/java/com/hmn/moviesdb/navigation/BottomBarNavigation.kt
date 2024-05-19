@@ -4,24 +4,19 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.hmn.moviesdb.ui.screens.detail.DetailScreen
 import com.hmn.moviesdb.ui.screens.detail.DetailViewModel
 import com.hmn.moviesdb.ui.screens.favourite.FavouriteScreen
 import com.hmn.moviesdb.ui.screens.home.HomeScreen
 import com.hmn.moviesdb.ui.screens.home.HomeViewModel
 import com.hmn.moviesdb.ui.screens.search.SearchScreen
 import com.hmn.moviesdb.ui.screens.search.SearchViewModel
-import com.hmn.moviesdb.ui.screens.view_all.ViewAllScreen
 import com.hmn.moviesdb.ui.screens.view_all.ViewAllViewModel
 import com.hmn.moviesdb.utils.exitApp
 

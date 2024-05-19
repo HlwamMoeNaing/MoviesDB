@@ -49,6 +49,7 @@ class ViewAllViewModel @Inject constructor(
     fun onEvent(event: ViewAllEvent) {
         when (event) {
             is ViewAllEvent.NavigateToDetail -> navigateToDetail(event.movieId)
+            ViewAllEvent.OnBackPress -> navigateUp()
         }
     }
 }
@@ -60,4 +61,5 @@ data class ViewAllUiState(
 
 sealed class ViewAllEvent {
     data class NavigateToDetail(val movieId: Int) : ViewAllEvent()
+    data object OnBackPress : ViewAllEvent()
 }

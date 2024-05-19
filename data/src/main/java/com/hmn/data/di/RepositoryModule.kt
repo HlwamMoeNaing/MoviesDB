@@ -1,6 +1,5 @@
 package com.hmn.data.di
 
-import com.hmn.data.domain.MoviesDbRepo
 import com.hmn.data.movies_data.local.AppDatabase
 import com.hmn.data.movies_data.network.TheMoviesDbApiService
 import com.hmn.data.repo.MovieRepository

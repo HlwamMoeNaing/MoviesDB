@@ -1,22 +1,14 @@
 package com.hmn.data.repo
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import com.hmn.data.domain.MovieRepo
-import com.hmn.data.domain.MoviesDbRepo
-import com.hmn.data.model.resp.ApiResponse
-import com.hmn.data.model.resp.AppDataResult
-import com.hmn.data.model.resp.MovieListResponse
+import com.hmn.data.model.ResourceState
 import com.hmn.data.model.resp.MovieVo
+import com.hmn.data.model.resp.Video
 import com.hmn.data.movies_data.local.AppDatabase
-import com.hmn.data.movies_data.network.ApiResponseHandler
 import com.hmn.data.movies_data.network.TheMoviesDbApiService
 import com.hmn.data.utils.MovieCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
-import retrofit2.Response
 import javax.inject.Inject
 
 class MovieRepository @Inject constructor(
@@ -47,12 +39,6 @@ class MovieRepository @Inject constructor(
         return appDatabase.movieDao().getMoviesWithCategory(category)
     }
 
-
-//    suspend fun checkMoviesExist(): Boolean {
-//        return withContext(Dispatchers.IO) {
-//            appDatabase.movieDao().getAllMovies().firstOrNull() != null
-//        }
-//    }
 
     suspend fun checkMoviesExist(): Boolean {
         return withContext(Dispatchers.IO) {
@@ -94,6 +80,22 @@ class MovieRepository @Inject constructor(
     suspend fun deleteAllMovies() {
         withContext(Dispatchers.IO) {
             appDatabase.movieDao().deleteAllSaveMovies()
+        }
+    }
+
+    suspend fun getVideoWithId(movieId: Int): ResourceState<Video> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getMovieVideos(movieId)
+                if (response.isSuccessful && response.body() != null) {
+                    ResourceState.Success(response.body()!!)
+                } else {
+                    val error = response.errorBody()?.string() ?: "Unknown error"
+                    ResourceState.Error(error)
+                }
+            } catch (e: Exception) {
+                ResourceState.Error(e.localizedMessage ?: "Unknown error")
+            }
         }
     }
 }

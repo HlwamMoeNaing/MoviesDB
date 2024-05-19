@@ -117,6 +117,11 @@ fun AppScaffold(
             topBarState.value = false
         }
 
+        currentRoute?.startsWith(Routes.PlayerScreen.name) == true -> {
+            bottomBarState.value = false
+            topBarState.value = false
+        }
+
         currentRoute?.contains(Routes.DetailScreen.name) == true -> {
             bottomBarState.value = false
             topBarState.value = false

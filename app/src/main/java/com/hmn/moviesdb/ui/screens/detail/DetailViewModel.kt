@@ -3,6 +3,7 @@ package com.hmn.moviesdb.ui.screens.detail
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import com.hmn.data.model.ResourceState
 import com.hmn.data.model.resp.MovieVo
 import com.hmn.data.repo.MovieRepository
 import com.hmn.data.utils.NetworkUtil
@@ -28,6 +29,8 @@ class DetailViewModel @Inject constructor(
                 _detailUiState.update {
                     it.copy(isLoading = true)
                 }
+                getVideoInfoWithId(id)
+
                 val data = repository.getMovieById(id)
                 _detailUiState.update {
                     it.copy(isLoading = false, movie = data, isFavorite = data.isFavourite)
@@ -42,7 +45,7 @@ class DetailViewModel @Inject constructor(
     }
 
 
-   private fun updateFavStatus(movieId: Int, isFav: Boolean) {
+    private fun updateFavStatus(movieId: Int, isFav: Boolean) {
         viewModelScope.launch {
             try {
                 repository.updateFavStatus(movieId, isFav)
@@ -55,9 +58,53 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    fun getVideoInfoWithId(id: Int) {
+        viewModelScope.launch {
+            try {
+                when (val response = repository.getVideoWithId(id)) {
+                    is ResourceState.Error -> {
+                        _detailUiState.update {
+                            it.copy(
+                                videoError = response.error
+                            )
+
+                        }
+                    }
+
+                    is ResourceState.Loading -> {
+                        _detailUiState.update {
+                            it.copy(
+                                videoError = null
+                            )
+                        }
+                    }
+
+                    is ResourceState.Success -> {
+                        val data = response.data
+                        val result = data.results.firstOrNull()
+                        _detailUiState.update {
+                            it.copy(
+                                videoError = null,
+                                videoKey = result?.key
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _detailUiState.update {
+                    it.copy(
+                        videoError = e.localizedMessage ?: "Something Wrong"
+                    )
+
+                }
+            }
+        }
+    }
+
     fun onEvent(event: DetailUiEvent) {
         when (event) {
             is DetailUiEvent.OnFavourite -> updateFavStatus(event.movieId, event.isFav)
+
         }
     }
 }
@@ -68,9 +115,15 @@ data class DetailUiState(
     val error: String? = null,
     val isFavorite: Boolean = false,
     val isFavErrorOccure: Boolean = false,
-    val favStateErrorMessage: String? = null
+    val favStateErrorMessage: String? = null,
+
+    val videoError: String? = null,
+    val videoKey: String? = null
+
 )
 
 sealed class DetailUiEvent {
     data class OnFavourite(val movieId: Int, val isFav: Boolean) : DetailUiEvent()
+
+
 }

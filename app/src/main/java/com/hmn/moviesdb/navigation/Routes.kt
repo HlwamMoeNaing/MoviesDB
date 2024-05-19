@@ -11,4 +11,6 @@ sealed class Routes(val name: String, val title: String = "") {
     data object FavouriteScreen : Routes("favourite_screen","Favourite")
     data object SearchScreen : Routes("search_screen","Search")
 
+    data object PlayerScreen : Routes("player_screen","Player")
+
 }

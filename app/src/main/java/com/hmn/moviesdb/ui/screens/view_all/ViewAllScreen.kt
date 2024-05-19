@@ -62,7 +62,9 @@ fun ViewAllContent(
                 DetailAppBar(
                     tittle = category.toUpperCase(),
                     isFav = false,
-                    onBackClick = { },
+                    onBackClick = {
+                                  viewModel.onEvent(ViewAllEvent.OnBackPress)
+                    },
                     onFavClickL = { },
                     tintColor = Color.Transparent)
                 LazyColumn {

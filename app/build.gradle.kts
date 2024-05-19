@@ -110,5 +110,10 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.navigation.compose)
     implementation ("androidx.compose.runtime:runtime-livedata:1.5.3")
+    implementation ("com.google.android.exoplayer:exoplayer:2.17.1")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.2.0")
+//    implementation( "com.pierfrancescosoffritti.androidyoutubeplayer:chromecast-sender:0.28")
+    implementation( "com.pierfrancescosoffritti.androidyoutubeplayer:core:11.0.1")
+
 
 }
