@@ -22,6 +22,7 @@ class ViewAllViewModel @Inject constructor(
     private val _viewAllUiState = MutableStateFlow(ViewAllUiState())
     val viewAllUiState = _viewAllUiState.asStateFlow()
 
+
     fun fetchMoviesWithCategory(category: String) {
         baseCheckNetwork()
         viewModelScope.launch {

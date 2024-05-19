@@ -23,14 +23,23 @@ class DetailViewModel @Inject constructor(
 ) : BaseViewModel(context, networkUtil) {
     private val _detailUiState = MutableStateFlow(DetailUiState())
     val detailUiState = _detailUiState.asStateFlow()
+    val isNetwork = MutableStateFlow(false)
+
+
+    init {
+        checkNetwork()
+    }
+     fun checkNetwork(){
+        viewModelScope.launch {
+            isNetwork.value = networkUtil.isNetworkConnected()
+        }
+    }
     fun getMovieById(id: Int) {
         viewModelScope.launch {
             try {
                 _detailUiState.update {
                     it.copy(isLoading = true)
                 }
-                getVideoInfoWithId(id)
-
                 val data = repository.getMovieById(id)
                 _detailUiState.update {
                     it.copy(isLoading = false, movie = data, isFavorite = data.isFavourite)

@@ -1,5 +1,6 @@
 package com.hmn.moviesdb.ui.screens.detail
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -60,6 +61,7 @@ import com.hmn.moviesdb.R
 import com.hmn.moviesdb.core.BaseScreen
 import com.hmn.moviesdb.navigation.Routes
 import com.hmn.moviesdb.ui.screens.YouTubePlayerActivity
+import com.hmn.moviesdb.ui.screens.login.LoginScreenContent
 import com.hmn.moviesdb.ui.theme.BlueVariant
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -72,6 +74,7 @@ fun DetailScreen(
     onBackPress: () -> Unit
 ) {
 
+
     LaunchedEffect(key1 = Unit) {
         detailViewModel.getMovieById(detailId)
     }
@@ -80,6 +83,7 @@ fun DetailScreen(
     val movieDetail = detailUiState.movie
     val error = detailUiState.error
     val isFavourite = detailUiState.isFavorite
+    val isInternetAvailable by detailViewModel.isNetwork.collectAsStateWithLifecycle()
 
     if (!error.isNullOrEmpty()){
         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
@@ -163,12 +167,18 @@ fun DetailScreen(
 
                 IconButton(
                     onClick = {
-
-                        if(isVideoErrorMessage == null && videoKey != null){
-                            YouTubePlayerActivity.start(context, videoKey)
+                        detailViewModel.checkNetwork()
+                        detailViewModel.getVideoInfoWithId(detailId)
+                        if(isInternetAvailable){
+                            if(isVideoErrorMessage == null && videoKey != null){
+                                YouTubePlayerActivity.start(context, videoKey)
+                            }else{
+                                Toast.makeText(context, isVideoErrorMessage ?: "Something Wrong", Toast.LENGTH_SHORT).show()
+                            }
                         }else{
-                            Toast.makeText(context, isVideoErrorMessage ?: "Something Wrong", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Network Unavailabale", Toast.LENGTH_SHORT).show()
                         }
+
 
                     },
                     modifier = Modifier
