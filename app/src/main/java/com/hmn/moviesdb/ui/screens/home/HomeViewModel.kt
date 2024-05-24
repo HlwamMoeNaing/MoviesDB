@@ -8,6 +8,7 @@ import com.hmn.data.utils.MovieCategory
 import com.hmn.data.utils.NetworkUtil
 import com.hmn.moviesdb.core.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,7 @@ class HomeViewModel @Inject constructor(
     init {
         fetchMovies()
         getFavoriteMovies()
+
     }
 
     private fun fetchMovies() {

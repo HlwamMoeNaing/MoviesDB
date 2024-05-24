@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.hmn.moviesdb.navigation.RootNavigation
+import com.hmn.moviesdb.ui.screens.coroutine_test.CoroutineScreen
 import com.hmn.moviesdb.ui.theme.MoviesDBTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,8 +27,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MoviesDBTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val padding = Modifier.padding(innerPadding)
-                    RootNavigation()
+                  val padding = Modifier.padding(innerPadding)
+//                    RootNavigation()
+                    CoroutineScreen()
                 }
             }
         }
