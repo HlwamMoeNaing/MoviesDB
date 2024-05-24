@@ -29,22 +29,30 @@ class HomeViewModel @Inject constructor(
     init {
         fetchMovies()
         getFavoriteMovies()
-
     }
 
     private fun fetchMovies() {
         viewModelScope.launch {
             _homeUiState.update { it.copy(isLoading = true) }
-
             try {
-                fetchAndSaveMovies(MovieCategory.NOW_PLAYING)
-                fetchAndSaveMovies(MovieCategory.TOP_RATED)
-                fetchAndSaveMovies(MovieCategory.POPULAR)
+                if (networkUtil.isNetworkConnected()) {
+                    // Fetch and save movies concurrently
+                    val savingDefferabale = async {
+                        fetchAndSaveMovies(MovieCategory.NOW_PLAYING)
+                        fetchAndSaveMovies(MovieCategory.TOP_RATED)
+                        fetchAndSaveMovies(MovieCategory.POPULAR)
+                    }
+                    savingDefferabale.await()
+                }
 
-                val nowPlayingMovies =
-                    movieRepository.getMoviesByCategory(MovieCategory.NOW_PLAYING.name)
-                val topRatedMovies = movieRepository.getMoviesByCategory(MovieCategory.TOP_RATED.name)
-                val popularMovies = movieRepository.getMoviesByCategory(MovieCategory.POPULAR.name)
+                // Fetch movies from the database
+                val nowPlayingMoviesDeferred = async { movieRepository.getMoviesByCategory(MovieCategory.NOW_PLAYING.name) }
+                val topRatedMoviesDeferred = async { movieRepository.getMoviesByCategory(MovieCategory.TOP_RATED.name) }
+                val popularMoviesDeferred = async { movieRepository.getMoviesByCategory(MovieCategory.POPULAR.name) }
+
+                val nowPlayingMovies = nowPlayingMoviesDeferred.await()
+                val topRatedMovies = topRatedMoviesDeferred.await()
+                val popularMovies = popularMoviesDeferred.await()
 
                 _homeUiState.update {
                     it.copy(
@@ -61,11 +69,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private suspend fun fetchAndSaveMovies(category: MovieCategory) {
-        if (networkUtil.isNetworkConnected()) {
-            movieRepository.fetchAndSaveMovies(category)
-        } else {
-            handleFetchMoviesError(Exception("No network connection"))
-        }
+        movieRepository.fetchAndSaveMovies(category)
     }
 
     private fun handleFetchMoviesError(e: Exception) {
@@ -73,12 +77,9 @@ class HomeViewModel @Inject constructor(
             try {
                 if (movieRepository.checkMoviesExist()) {
                     movieRepository.getAllMovies().collect { movies ->
-                        val nowPlayingMovies =
-                            movies.filter { it.category == MovieCategory.NOW_PLAYING.name }
-                        val topRatedMovies =
-                            movies.filter { it.category == MovieCategory.TOP_RATED.name }
-                        val popularMovies =
-                            movies.filter { it.category == MovieCategory.POPULAR.name }
+                        val nowPlayingMovies = movies.filter { it.category == MovieCategory.NOW_PLAYING.name }
+                        val topRatedMovies = movies.filter { it.category == MovieCategory.TOP_RATED.name }
+                        val popularMovies = movies.filter { it.category == MovieCategory.POPULAR.name }
 
                         _homeUiState.update {
                             it.copy(
@@ -110,14 +111,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-     fun getFavoriteMovies(){
+    fun getFavoriteMovies() {
         viewModelScope.launch {
             try {
                 val favMovies = movieRepository.getFavouriteMovies()
                 _homeUiState.update {
                     it.copy(fetchFavouriteMovies = favMovies)
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 _homeUiState.update {
                     it.copy(errorMessageForFavourite = e.localizedMessage)
                 }
@@ -125,12 +126,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onEvent(event: HomeUiEvent){
-        when(event){
+    fun onEvent(event: HomeUiEvent) {
+        when (event) {
             is HomeUiEvent.NavigateToDetail -> navigateToDetail(event.id)
             is HomeUiEvent.NavigateToViewAll -> navigateToViewAllWithCategory(event.category)
         }
-
     }
 }
 
@@ -141,15 +141,11 @@ data class HomeUiState(
     val nowPlayingMovies: List<MovieVo> = emptyList(),
     val topRatedMovies: List<MovieVo> = emptyList(),
     val popularMovies: List<MovieVo> = emptyList(),
-
-    val fetchFavouriteMovies:List<MovieVo> = emptyList(),
-    val errorMessageForFavourite:String? = null
+    val fetchFavouriteMovies: List<MovieVo> = emptyList(),
+    val errorMessageForFavourite: String? = null
 )
 
-sealed class HomeUiEvent(){
-
-    data class NavigateToDetail(val id:Int): HomeUiEvent()
-
-    data class NavigateToViewAll(val category:String): HomeUiEvent()
-
+sealed class HomeUiEvent {
+    data class NavigateToDetail(val id: Int) : HomeUiEvent()
+    data class NavigateToViewAll(val category: String) : HomeUiEvent()
 }

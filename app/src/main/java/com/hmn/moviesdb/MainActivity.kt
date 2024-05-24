@@ -28,8 +28,8 @@ class MainActivity : ComponentActivity() {
             MoviesDBTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                   val padding = Modifier.padding(innerPadding)
-//                    RootNavigation()
-                    CoroutineScreen()
+                  RootNavigation()
+                   // CoroutineScreen()
                 }
             }
         }
